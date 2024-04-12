@@ -35,6 +35,9 @@ func main() {
 	// post new album
 	router.POST("/albums", postAlbums)
 
+	// update album by id
+	router.PUT("/albums/:id", updateAlbumById)
+
 	// delete album by id
 	router.DELETE("/albums/:id", deleteAlbumById)
 
@@ -68,6 +71,27 @@ func postAlbums(c *gin.Context) {
 	// post newAlbum to albums
 	albums = append(albums, newAlbum)
 	c.IndentedJSON(http.StatusCreated, gin.H{"data": newAlbum, "message": "success created album"})
+}
+
+func updateAlbumById(c *gin.Context) {
+	id := c.Param("id")
+	var updatedAlbum album
+
+	// bind the recieve json to album
+	if err := c.BindJSON(&updatedAlbum); err != nil {
+		return
+	}
+
+	if updatedAlbum.ID == "" || updatedAlbum.ID != id {
+		return
+	}
+
+	for i := 0; i < len(albums); i++ {
+		if albums[i].ID == id {
+			albums[i] = updatedAlbum
+			c.IndentedJSON(http.StatusOK, gin.H{"data: ": updatedAlbum, "message": "success updated album"})
+		}
+	}
 }
 
 func deleteAlbumById(c *gin.Context) {
