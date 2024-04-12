@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -25,26 +26,29 @@ func main() {
 
 	// get all albums
 	router.GET("/albums", func(c *gin.Context) {
-		c.IndentedJSON(http.StatusOK, albums)
+		c.IndentedJSON(http.StatusOK, gin.H{"data": albums, "message": "success retrieve albums"})
 	})
 
 	// get albums by id
-	router.GET("/albums/:id", getAlbumsById)
+	router.GET("/albums/:id", getAlbumById)
 
 	// post new album
 	router.POST("/albums", postAlbums)
+
+	// delete album by id
+	router.DELETE("/albums/:id", deleteAlbumById)
 
 	// run the http
 	router.Run("localhost:8080")
 }
 
-func getAlbumsById(c *gin.Context) {
+func getAlbumById(c *gin.Context) {
 	id := c.Param("id")
 
 	// search the id
 	for _, album := range albums {
 		if album.ID == id {
-			c.IndentedJSON(http.StatusOK, album)
+			c.IndentedJSON(http.StatusOK, gin.H{"data": album, "message": "success retrieve album"})
 			return
 		}
 	}
@@ -54,6 +58,8 @@ func getAlbumsById(c *gin.Context) {
 func postAlbums(c *gin.Context) {
 	var newAlbum album
 
+	newAlbum.ID = fmt.Sprint(len(albums))
+
 	// bind the recieve json to newAlbum
 	if err := c.BindJSON(&newAlbum); err != nil {
 		return
@@ -61,5 +67,17 @@ func postAlbums(c *gin.Context) {
 
 	// post newAlbum to albums
 	albums = append(albums, newAlbum)
-	c.IndentedJSON(http.StatusCreated, newAlbum)
+	c.IndentedJSON(http.StatusCreated, gin.H{"data": newAlbum, "message": "success created album"})
+}
+
+func deleteAlbumById(c *gin.Context) {
+	id := c.Param("id")
+
+	for i := 0; i < len(albums); i++ {
+		if albums[i].ID == id {
+			c.IndentedJSON(http.StatusOK, gin.H{"data": albums[i], "message": "album has been deleted"})
+			albums = append(albums[:i], albums[i+1:]...)
+			return
+		}
+	}
 }
